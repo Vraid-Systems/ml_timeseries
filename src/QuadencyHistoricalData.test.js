@@ -1,6 +1,6 @@
 const axios = require('axios')
-const HistoricalData = require('./HistoricalData')
 const ItervalEnum = require('./IntervalEnum')
+const QuadencyHistoricalData = require('./QuadencyHistoricalData')
 
 jest.mock('axios', () => ({
     get: jest.fn(() => ({
@@ -8,13 +8,13 @@ jest.mock('axios', () => ({
     })),
 }))
 
-describe('HistoricalData', () => {
+describe('QuadencyHistoricalData', () => {
     beforeEach(() => {
         axios.get.mockClear()
     })
 
     test('that get calls axios.get with the correct params', async () => {
-        const historicalData = new HistoricalData(ItervalEnum.HOUR_6, 60, ['ALGO/USD', 'XTZ/USD'])
+        const historicalData = new QuadencyHistoricalData(ItervalEnum.HOUR_6, 60, ['ALGO/USD', 'XTZ/USD'])
 
         await historicalData.get()
         expect(axios.get).toBeCalledTimes(1)

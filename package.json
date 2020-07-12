@@ -1,5 +1,5 @@
 {
-  "name": "crypto_trader",
+  "name": "ml_trader",
   "version": "1.0.0",
   "main": "src/index.js",
   "scripts": {
@@ -10,6 +10,7 @@
     "test": "jest src/"
   },
   "dependencies": {
+    "@tensorflow/tfjs-node": "^2.0.1",
     "axios": "^0.19.2",
     "pm2": "^4.4.0"
   },
