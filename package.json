@@ -1,0 +1,29 @@
+{
+  "name": "ml_trader",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "pm2:start": "npx pm2 start src/index.js",
+    "pm2:stop": "npx pm2 del 0",
+    "lint": "eslint src",
+    "start": "node src/index.js",
+    "test": "jest src/"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs-node": "^2.0.1",
+    "axios": "^0.19.2",
+    "lodash": "^4.17.19",
+    "pm2": "^4.4.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.4.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0",
+    "jest": "^26.1.0"
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  }
+}
