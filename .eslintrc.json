@@ -1,5 +1,11 @@
 {
-  "env": { "es6": true },
+  "env": { "es6": true, "jest": true, "mocha": true, "node": true },
   "extends": ["airbnb-base"],
-  "parserOptions": { "ecmaVersion": 2018 }
+  "parserOptions": { "ecmaVersion": 2018 },
+  "rules": {
+    "comma-dangle": [2, "always-multiline"],
+    "indent": ["error", 4],
+    "semi": [2, "never"],
+    "semi-style": [2, "first"]
+  }
 }
