@@ -1,7 +1,9 @@
 const tf = require('@tensorflow/tfjs-node')
 
 class SingleVariableTimeSeriesModel {
-    constructor(historicalData, trainingIterations = 30) {
+    constructor(historicalData, barsToPredict = 20, trainingIterations = 30) {
+        this.barsToPredict = barsToPredict
+        this.barSize = 0
         this.hiddenLayerNeurons = 8
         this.historicalData = historicalData
         this.learningRate = 0.01
@@ -9,7 +11,6 @@ class SingleVariableTimeSeriesModel {
         this.outputMax = 0
         this.outputMin = 0
         this.trainingIterations = trainingIterations
-        this.trainingSize = 0.5
     }
 
     async predict(data) {
@@ -32,16 +33,18 @@ class SingleVariableTimeSeriesModel {
     ) {
         const trainingData = this.historicalData.slice(
             0,
-            Math.ceil(this.trainingSize * this.historicalData.length),
+            this.historicalData.length - this.barsToPredict,
         )
+        const trainingDataLength = trainingData.length
 
         const trainingDataTime = trainingData.map(
             (timePriceTuple) => timePriceTuple[0],
         )
+        this.barSize = trainingDataTime[1] - trainingDataTime[0]
         const trainingTensorTime = tf.tensor1d(
             trainingDataTime,
         ).reshape(
-            [1, trainingDataTime.length, 1],
+            [1, trainingDataLength, 1],
         )
         const normalizedX = trainingTensorTime.sub(
             trainingTensorTime.min(),
@@ -55,7 +58,7 @@ class SingleVariableTimeSeriesModel {
         const trainingTensorPrice = tf.tensor1d(
             trainingDataPrice,
         ).reshape(
-            [1, trainingDataPrice.length, 1],
+            [1, trainingDataLength, 1],
         )
         this.outputMax = trainingTensorPrice.max()
         this.outputMin = trainingTensorPrice.min()
@@ -66,13 +69,15 @@ class SingleVariableTimeSeriesModel {
         )
 
         this.model.add(tf.layers.lstm({
-            inputShape: [trainingDataTime.length, 1],
+            inputShape: [trainingDataLength, 1],
             returnSequences: true,
             units: this.hiddenLayerNeurons,
+            useBias: true,
         }))
 
         this.model.add(tf.layers.dense({
             units: 1,
+            useBias: true,
         }))
 
         this.model.compile({
@@ -84,7 +89,12 @@ class SingleVariableTimeSeriesModel {
             normalizedX,
             normalizedY,
             {
+                batchSize: this.barsToPredict,
                 callbacks: {
+                    onEpochBegin: () => {
+                        tf.util.shuffle(normalizedX)
+                        tf.util.shuffle(normalizedY)
+                    },
                     onEpochEnd: endOfTrainingIterationCallback,
                 },
                 epochs: this.trainingIterations,
@@ -101,7 +111,7 @@ class SingleVariableTimeSeriesModel {
 
     async validate() {
         const unseenTrainingData = this.historicalData.slice(
-            Math.floor(this.trainingSize * this.historicalData.length),
+            this.barsToPredict,
             this.historicalData.length,
         )
         const unseenTrainingDataTime = unseenTrainingData.map(
