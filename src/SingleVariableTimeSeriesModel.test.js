@@ -12,28 +12,11 @@ describe('SingleVariableTimeSeriesModel', () => {
 
     test('predicting the next bars completes', async () => {
         const btcUsdPairData = lodash.reverse(parsedHistoricalBtcData['BTC/USD'])
-        const timeSeriesModel = new SingleVariableTimeSeriesModel(btcUsdPairData, 20, 0.01, 5)
+        const timeSeriesModel = new SingleVariableTimeSeriesModel(btcUsdPairData, 8, 0.01, 5)
         await timeSeriesModel.train()
-        const predictionOnUnseenData = await timeSeriesModel.predictNextBars()
+        const predictedNextBars = await timeSeriesModel.predictNextBars()
 
-        expect(predictionOnUnseenData).not.toBeNull()
-        expect(predictionOnUnseenData.length).toBe(timeSeriesModel.barsToPredict)
-        expect(
-            predictionOnUnseenData[predictionOnUnseenData.length - 1] > 4000
-            || predictionOnUnseenData[predictionOnUnseenData.length - 1] < 9000,
-        ).toBeTruthy()
-    })
-
-    test('training and validation completes', async () => {
-        const btcUsdPairData = lodash.reverse(parsedHistoricalBtcData['BTC/USD'])
-        const timeSeriesModel = new SingleVariableTimeSeriesModel(btcUsdPairData, 20, 0.01, 5)
-        await timeSeriesModel.train()
-        const predictionOnUnseenData = await timeSeriesModel.validate()
-
-        expect(predictionOnUnseenData).not.toBeNull()
-        expect(
-            predictionOnUnseenData[predictionOnUnseenData.length - 1] > 4000
-            || predictionOnUnseenData[predictionOnUnseenData.length - 1] < 9000,
-        ).toBeTruthy()
+        expect(predictedNextBars).not.toBeNull()
+        expect(predictedNextBars.length).toBe(timeSeriesModel.barsToPredict)
     })
 })
