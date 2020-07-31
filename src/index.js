@@ -5,6 +5,7 @@ const SingleVariableTimeSeriesModel = require('./SingleVariableTimeSeriesModel')
 
 const pairToInspect = 'BTC/USD'
 
+const hoursInADay = 24
 const hoursIn5Years = 43800
 const historicalData = new QuadencyHistoricalData(
     ItervalEnum.MINUTE_15, hoursIn5Years * 4, [pairToInspect],
@@ -15,7 +16,7 @@ const main = async () => {
     const parsedHistoricalData = QuadencyHistoricalData.parseQuadencyNumerics(rawHistoricalData)
     const pairDataAscendingInTime = lodash.reverse(parsedHistoricalData[pairToInspect])
     const timeSeriesModel = new SingleVariableTimeSeriesModel(
-        pairDataAscendingInTime, 8, 0.001, 100,
+        pairDataAscendingInTime, hoursInADay * 4, 0.001, 400,
     )
     await timeSeriesModel.train()
     const predicedNextBars = await timeSeriesModel.predictNextBars()

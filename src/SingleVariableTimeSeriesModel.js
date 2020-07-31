@@ -14,8 +14,15 @@ class SingleVariableTimeSeriesModel {
         this.learningRate = learningRate
         this.lstmNeuronFactor = 4
         this.model = tf.sequential()
+        this.numberOfBarsToBasePredictionOn = this.barsToPredict * 4
         this.outputMax = 0
         this.outputMin = 0
+        this.numberOfSplits = Math.floor(
+            (
+                this.historicalData.length - this.learningLookBack
+            ) / this.numberOfBarsToBasePredictionOn,
+        )
+        this.splitTrainingDataLength = this.numberOfSplits * this.numberOfBarsToBasePredictionOn
         this.trainingData = lodash.cloneDeep(this.historicalData)
         this.trainingIterations = trainingIterations
     }
@@ -38,14 +45,18 @@ class SingleVariableTimeSeriesModel {
         this.outputMax = trainingTensorPrice.max()
         this.outputMin = trainingTensorPrice.min()
 
-        const trainingDataPriceX = trainingDataPrice.slice(
-            0,
-            trainingDataPrice.length - this.learningLookBack,
-        )
-        const trainingTensorPriceX = tf.tensor1d(
-            trainingDataPriceX,
+        const trainingTensorPriceX = tf.stack(
+            tf.split(
+                tf.tensor1d(
+                    trainingDataPrice.slice(
+                        0,
+                        this.splitTrainingDataLength,
+                    ),
+                ),
+                this.numberOfSplits,
+            ),
         ).reshape(
-            [trainingDataPriceX.length, 1, 1],
+            [this.numberOfSplits, this.numberOfBarsToBasePredictionOn, 1],
         )
         const normalizedX = trainingTensorPriceX.sub(
             this.outputMin,
@@ -53,14 +64,18 @@ class SingleVariableTimeSeriesModel {
             this.outputMax.sub(this.outputMin),
         )
 
-        const trainingDataPriceY = trainingDataPrice.slice(
-            this.learningLookBack,
-            trainingDataPrice.length,
-        )
-        const trainingTensorPriceY = tf.tensor1d(
-            trainingDataPriceY,
+        const trainingTensorPriceY = tf.stack(
+            tf.split(
+                tf.tensor1d(
+                    trainingDataPrice.slice(
+                        this.learningLookBack,
+                        this.splitTrainingDataLength + this.learningLookBack,
+                    ),
+                ),
+                this.numberOfSplits,
+            ),
         ).reshape(
-            [trainingDataPriceY.length, 1, 1],
+            [this.numberOfSplits, this.numberOfBarsToBasePredictionOn, 1],
         )
         const normalizedY = trainingTensorPriceY.sub(
             this.outputMin,
@@ -73,7 +88,7 @@ class SingleVariableTimeSeriesModel {
 
     async predict(data) {
         const predictionInputTensor = tf.tensor1d(data).reshape(
-            [data.length, 1, 1],
+            [1, data.length, 1],
         )
 
         const normalizedPredictionResultTensor = this.model.predict(
@@ -96,24 +111,27 @@ class SingleVariableTimeSeriesModel {
         const historicalValues = this.historicalData.map(
             (timePriceTuple) => timePriceTuple[1],
         )
-        let mostRecentValue = historicalValues[historicalValues.length - 1]
+        const mostRecentValues = historicalValues.slice(
+            historicalValues.length - this.numberOfBarsToBasePredictionOn,
+            historicalValues.length,
+        )
 
         const timesToPredict = []
-        const predictedValues = []
         for (let nextBarNumber = 1; nextBarNumber <= this.barsToPredict; nextBarNumber += 1) {
             const nextTimeBar = mostRecentTimeBar + (barSize * nextBarNumber)
             timesToPredict.push(nextTimeBar)
 
             // eslint-disable-next-line no-await-in-loop
-            mostRecentValue = await this.predict([mostRecentValue])
-            predictedValues.push(mostRecentValue)
+            const mostRecentValue = await this.predict(mostRecentValues)
+            mostRecentValues.push(mostRecentValue)
+            mostRecentValues.shift()
         }
 
         const predictedNextBars = []
         for (let index = 0; index < timesToPredict.length; index += 1) {
             predictedNextBars.push({
                 time: timesToPredict[index],
-                value: predictedValues[index],
+                value: mostRecentValues[index],
             })
         }
 
@@ -122,7 +140,7 @@ class SingleVariableTimeSeriesModel {
 
     async train() {
         this.model.add(tf.layers.lstm({
-            inputShape: [1, 1],
+            inputShape: [this.numberOfBarsToBasePredictionOn, 1],
             returnSequences: true,
             units: this.lstmNeuronFactor,
         }))
@@ -144,7 +162,7 @@ class SingleVariableTimeSeriesModel {
                 batchSize: 32,
                 epochs: this.trainingIterations,
                 shuffle: true,
-                validationSplit: 0.3,
+                validationSplit: 0.2,
                 verbose: 1,
             },
         )
