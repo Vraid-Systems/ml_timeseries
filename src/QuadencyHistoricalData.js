@@ -11,7 +11,7 @@ class QuadencyHistoricalData {
     async get() {
         const pairsUrlParam = this.pairsArray.join(',').replace(/\//g, '%2F')
         const axiosResponse = await axios.get(`https://quadency.com/api/v1/public/prices/history/averages?bars=${this.evenNumberOfBarsBack}&interval=${this.intervalEnum.toString()}&pairs=${pairsUrlParam}`)
-        return axiosResponse.data
+        return QuadencyHistoricalData.parseQuadencyNumerics(axiosResponse.data)
     }
 }
 
