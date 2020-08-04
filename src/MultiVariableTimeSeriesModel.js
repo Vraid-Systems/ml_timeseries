@@ -9,7 +9,6 @@ class MultiVariableTimeSeriesModel {
         trainingIterations = 30,
     ) {
         this.barsToPredict = barsToPredict
-        this.historicalData = ascendingHistoricalData
         this.learningLookBack = 1
         this.learningRate = learningRate
         this.lstmNeuronFactor = 4
@@ -19,6 +18,11 @@ class MultiVariableTimeSeriesModel {
         this.outputMax = 0
         this.outputMin = 0
         this.positionOfTimeFeature = 0
+        this.trainingIterations = trainingIterations
+
+        this.historicalData = ascendingHistoricalData.filter(
+            (currentElement) => (currentElement.length - 1) === this.numberOfFeatureVariables,
+        )
         this.numberOfSplits = Math.floor(
             (
                 this.historicalData.length - this.learningLookBack
@@ -26,7 +30,6 @@ class MultiVariableTimeSeriesModel {
         )
         this.splitTrainingDataLength = this.numberOfSplits * this.numberOfBarsToBasePredictionOn
         this.trainingData = lodash.cloneDeep(this.historicalData)
-        this.trainingIterations = trainingIterations
     }
 
     denormalizeBackToProblemSpace(normalizedPredictionTensor) {
@@ -100,7 +103,7 @@ class MultiVariableTimeSeriesModel {
 
     async predict(data) {
         const predictionInputTensor = tf.tensor(data).reshape(
-            [1, data.length, this.numberOfFeatureVariables],
+            [1, data.length, data[0].length],
         )
 
         const normalizedPredictionResultTensor = this.model.predict(
@@ -109,8 +112,8 @@ class MultiVariableTimeSeriesModel {
         const problemRangePredictionTensor = this.denormalizeBackToProblemSpace(
             normalizedPredictionResultTensor,
         )
-        const problemRangePrediction = await problemRangePredictionTensor.data()
-        return Array.from(problemRangePrediction)[0]
+        const problemRangePrediction = await problemRangePredictionTensor.array()
+        return problemRangePrediction[0][0]
     }
 
     async predictNextBars() {
@@ -147,7 +150,7 @@ class MultiVariableTimeSeriesModel {
         for (let index = 0; index < timesToPredict.length; index += 1) {
             predictedNextBars.push({
                 time: timesToPredict[index],
-                value: mostRecentValues[index],
+                features: mostRecentValues[index],
             })
         }
 
@@ -167,7 +170,7 @@ class MultiVariableTimeSeriesModel {
         }))
 
         this.model.add(tf.layers.dense({
-            units: 1,
+            units: this.numberOfFeatureVariables,
         }))
 
         this.model.compile({
