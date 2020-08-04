@@ -1,5 +1,5 @@
 const axios = require('axios')
-const ItervalEnum = require('./IntervalEnum')
+const ItervalEnum = require('./QuadencyIntervalEnum')
 const QuadencyHistoricalData = require('./QuadencyHistoricalData')
 
 jest.mock('axios', () => ({

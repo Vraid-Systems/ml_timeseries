@@ -1,5 +1,5 @@
 const axios = require('axios')
-const ItervalEnum = require('./IntervalEnum')
+const ItervalEnum = require('./QuadencyIntervalEnum')
 
 class QuadencyHistoricalData {
     constructor(intervalEnum = ItervalEnum.HOUR_1, evenNumberOfBarsBack = (24 * 5), pairsArray = ['BTC/USD']) {
@@ -9,6 +9,7 @@ class QuadencyHistoricalData {
     }
 
     async get() {
+        // TODO down shift to lowest interval and get most recent bar for increased accuracy
         const pairsUrlParam = this.pairsArray.join(',').replace(/\//g, '%2F')
         const axiosResponse = await axios.get(`https://quadency.com/api/v1/public/prices/history/averages?bars=${this.evenNumberOfBarsBack}&interval=${this.intervalEnum.toString()}&pairs=${pairsUrlParam}`)
         return QuadencyHistoricalData.parseQuadencyNumerics(axiosResponse.data)

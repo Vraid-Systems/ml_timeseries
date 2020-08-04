@@ -1,14 +1,14 @@
 const lodash = require('lodash')
-const ItervalEnum = require('./IntervalEnum')
 const MultiVariableTimeSeriesModel = require('./MultiVariableTimeSeriesModel')
 const QuadencyHistoricalData = require('./QuadencyHistoricalData')
+const QuadencyItervalEnum = require('./QuadencyIntervalEnum')
 
 const pairToInspect = 'BTC/USD'
 
 const hoursInADay = 24
 const hoursIn5Years = 43800
 const quadencyHistoricalData = new QuadencyHistoricalData(
-    ItervalEnum.MINUTE_15, hoursIn5Years * 4, [pairToInspect],
+    QuadencyItervalEnum.MINUTE_15, hoursIn5Years * 4, [pairToInspect],
 )
 
 const main = async () => {
