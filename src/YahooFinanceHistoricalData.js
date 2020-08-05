@@ -19,13 +19,13 @@ YahooFinanceHistoricalData.processIntoFeatures = (data) => {
     const featureTuples = []
 
     const featureObj = data.chart.result[0]
-    const millisFromUnixEpochTimestamps = featureObj.timestamp
+    const secondsFromUnixEpochTimestamps = featureObj.timestamp
     const candleClosePrices = featureObj.indicators.quote[0].close
     const candleVolumes = featureObj.indicators.quote[0].volume
 
-    for (let index = 0; index < millisFromUnixEpochTimestamps.length; index += 1) {
+    for (let index = 0; index < secondsFromUnixEpochTimestamps.length; index += 1) {
         featureTuples.push([
-            millisFromUnixEpochTimestamps[index],
+            secondsFromUnixEpochTimestamps[index] * 1000,
             candleClosePrices[index],
             candleVolumes[index],
         ])

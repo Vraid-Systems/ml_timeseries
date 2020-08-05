@@ -3316,5 +3316,6 @@ describe('YahooFinanceHistoricalData', () => {
         expect(featureTuples).not.toBeNull()
         expect(featureTuples.length).toBe(448)
         expect(featureTuples[0].length).toBe(3)
+        expect(featureTuples[0][0]).toBeGreaterThan(1564980234 * 1000)
     })
 })
