@@ -1,59 +1,43 @@
-const lodash = require('lodash')
-const MultiVariableTimeSeriesModel = require('./MultiVariableTimeSeriesModel')
-const QuadencyHistoricalData = require('./QuadencyHistoricalData')
-const QuadencyItervalEnum = require('./QuadencyIntervalEnum')
-const YahooFinanceHistoricalData = require('./YahooFinanceHistoricalData')
-const YahooFinanceIntervalEnum = require('./YahooFinanceIntervalEnum')
-const YahooFinanceRangeEnum = require('./YahooFinanceRangeEnum')
+const express = require('express')
+const fs = require('fs')
+const Prediction = require('./Prediction')
 
-const predictBTC = async () => {
-    const pairToInspect = 'BTC/USD'
-    const hoursInADay = 24
-    const hoursIn5Years = 43800
-    const quadencyHistoricalData = new QuadencyHistoricalData(
-        QuadencyItervalEnum.MINUTE_15, hoursIn5Years * 4, [pairToInspect],
-    )
+const basePredictionsPath = '/tmp/ml_trader/predictions'
 
-    const historicalData = await quadencyHistoricalData.get()
-    const pairDataAscendingInTime = lodash.reverse(historicalData[pairToInspect])
-    const timeSeriesModel = new MultiVariableTimeSeriesModel(
-        pairDataAscendingInTime, hoursInADay * 4, 0.001, 130,
-    )
-    await timeSeriesModel.train()
-    const predictedNextBars = await timeSeriesModel.predictNextBars()
+// regular prediction creation
+const watchlistCsv = process.env.WATCHLIST_CSV || ''
+const watchlist = watchlistCsv.split(',')
+watchlist.forEach((predictionCommand) => {
+    const prediction = new Prediction(predictionCommand, basePredictionsPath)
+    prediction.schedule()
+})
 
-    for (let index = 0; index < predictedNextBars.length; index += 1) {
-        const date = new Date(predictedNextBars[index].time)
-        const price = predictedNextBars[index].value
-        console.log(`At ${date.toISOString()} I predict the price will be ${price}`)
-    }
-}
+// serve predictions for viewing
+const app = express()
 
-const predictTicker = async (tickerSymbol) => {
-    const yahooFinanceHistoricalData = new YahooFinanceHistoricalData(
-        YahooFinanceIntervalEnum.DAY_1,
-        YahooFinanceRangeEnum.MAX,
-        tickerSymbol,
-    )
-    const historicalData = await yahooFinanceHistoricalData.get()
-    const historicalFeatures = YahooFinanceHistoricalData.processIntoFeatures(historicalData)
-    const timeSeriesModel = new MultiVariableTimeSeriesModel(
-        historicalFeatures, 30, 0.001, 30,
-    )
-    await timeSeriesModel.train()
-    const predictedNextBars = await timeSeriesModel.predictNextBars()
+app.use(express.static('public'))
 
-    for (let index = 0; index < predictedNextBars.length; index += 1) {
-        const date = new Date(predictedNextBars[index].time)
-        const price = predictedNextBars[index].features[0]
-        console.log(`At ${date.toISOString()} I predict the price will be ${price}`)
-    }
-}
+app.get('/predictions', (req, res) => {
+    const predictions = {}
 
-const predictESS = () => predictTicker('ESS')
+    const availablePredictedTickers = fs.readdirSync(basePredictionsPath)
 
-const predictMRK = () => predictTicker('MRK')
+    availablePredictedTickers.forEach((availablePredictedTicker) => {
+        predictions[availablePredictedTicker] = {}
 
-predictBTC()
-predictESS()
-predictMRK()
+        const predictionsForTickerBasePath = `${basePredictionsPath}/${availablePredictedTicker}`
+        const filenames = fs.readdirSync(predictionsForTickerBasePath)
+
+        console.log(`Found predictions ${filenames} for ${availablePredictedTicker}`)
+
+        filenames.forEach((filename) => {
+            const predictionJsonString = fs.readFileSync(`${predictionsForTickerBasePath}/${filename}`)
+            predictions[availablePredictedTicker][filename] = JSON.parse(predictionJsonString)
+        })
+    })
+
+    res.set('Content-Type', 'application/json')
+    res.send(predictions)
+})
+
+app.listen(3049, () => console.log(`HTTP listening on ${3049}`))

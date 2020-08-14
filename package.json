@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "main": "src/index.js",
   "scripts": {
+    "docker:build": "docker build --tag vraidsys/ml_trader:1.0.0 .",
+    "docker:run": "docker run -d -p 3049:3049 --env WATCHLIST_CSV=Crypto:BTC,Stock:BEP --volume ml_trader:/tmp/ml_trader vraidsys/ml_trader:1.0.0",
     "pm2:start": "npx pm2 start src/index.js",
     "pm2:stop": "npx pm2 del 0",
     "lint": "eslint src",
@@ -12,14 +14,16 @@
   "dependencies": {
     "@tensorflow/tfjs-node": "^2.0.1",
     "axios": "^0.19.2",
+    "express": "^4.17.1",
     "lodash": "^4.17.19",
-    "pm2": "^4.4.0"
+    "node-cron": "^2.0.3"
   },
   "devDependencies": {
     "eslint": "^7.4.0",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-plugin-import": "^2.22.0",
-    "jest": "^26.1.0"
+    "jest": "^26.1.0",
+    "pm2": "^4.4.0"
   },
   "jest": {
     "testPathIgnorePatterns": [
