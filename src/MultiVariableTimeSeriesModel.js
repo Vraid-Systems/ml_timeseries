@@ -187,7 +187,7 @@ class MultiVariableTimeSeriesModel {
                 epochs: this.trainingIterations,
                 shuffle: true,
                 validationSplit: 0.2,
-                verbose: 1,
+                verbose: 0,
             },
         )
 
