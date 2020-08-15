@@ -6,12 +6,23 @@ class YahooFinanceHistoricalData {
     constructor(intervalEnum = ItervalEnum.HOUR_1, rangeEnum = RangeEnum.MONTH_3, tickerSymbol = 'QQQ') {
         this.intervalEnum = intervalEnum
         this.rangeEnum = rangeEnum
+        this.smallestIntervalEnum = ItervalEnum.MINUTE_1
         this.tickerSymbol = tickerSymbol
     }
 
     async get() {
-        const axiosResponse = await axios.get(`https://query1.finance.yahoo.com/v7/finance/chart/${this.tickerSymbol}?interval=${this.intervalEnum}&range=${this.rangeEnum}`)
-        return axiosResponse.data
+        const standardResponse = await axios.get(`https://query1.finance.yahoo.com/v7/finance/chart/${this.tickerSymbol}?interval=${this.intervalEnum}&range=${this.rangeEnum}`)
+        let historicalData = YahooFinanceHistoricalData.processIntoFeatures(standardResponse.data)
+
+        if (this.intervalEnum !== this.smallestIntervalEnum) {
+            const mostRecentPossibleResponse = await axios.get(`https://query1.finance.yahoo.com/v7/finance/chart/${this.tickerSymbol}?interval=${this.smallestIntervalEnum}&range=${this.smallestIntervalEnum}`)
+            const mostRecentPossibleHistoricalData = YahooFinanceHistoricalData.processIntoFeatures(
+                mostRecentPossibleResponse.data,
+            )
+            historicalData = historicalData.concat(mostRecentPossibleHistoricalData)
+        }
+
+        return historicalData
     }
 }
 

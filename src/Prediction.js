@@ -69,16 +69,15 @@ Prediction.getNumericDateFromDateObject = (dateObject = new Date()) => Number.pa
 Prediction.predictCrypto = async (tickerSymbol, trainingIterations = 130) => {
     const pairToInspect = `${tickerSymbol}/USD`
     const daysIn5Years = 1825
-    const hoursIn1Day = 24
 
     const quadencyHistoricalData = new QuadencyHistoricalData(
-        QuadencyItervalEnum.HOUR_1, daysIn5Years * hoursIn1Day, [pairToInspect],
+        QuadencyItervalEnum.HOUR_1, daysIn5Years * 24, [pairToInspect],
     )
     const historicalData = await quadencyHistoricalData.get()
     const pairDataAscendingInTime = lodash.reverse(historicalData[pairToInspect])
 
     const timeSeriesModel = new MultiVariableTimeSeriesModel(
-        pairDataAscendingInTime, hoursIn1Day + 3, 0.001, trainingIterations,
+        pairDataAscendingInTime, 2 * 24, 0.001, trainingIterations,
     )
     await timeSeriesModel.train()
     const predictedNextBars = await timeSeriesModel.predictNextBars()
@@ -96,14 +95,13 @@ Prediction.predictCrypto = async (tickerSymbol, trainingIterations = 130) => {
 
 Prediction.predictStock = async (tickerSymbol, trainingIterations = 40) => {
     const yahooFinanceHistoricalData = new YahooFinanceHistoricalData(
-        YahooFinanceIntervalEnum.DAY_1,
-        YahooFinanceRangeEnum.MAX,
+        YahooFinanceIntervalEnum.HOUR_1,
+        YahooFinanceRangeEnum.YEAR_2,
         tickerSymbol,
     )
-    const historicalData = await yahooFinanceHistoricalData.get()
-    const historicalFeatures = YahooFinanceHistoricalData.processIntoFeatures(historicalData)
+    const historicalFeatures = await yahooFinanceHistoricalData.get()
     const timeSeriesModel = new MultiVariableTimeSeriesModel(
-        historicalFeatures, 30, 0.001, trainingIterations,
+        historicalFeatures, 3 * 24, 0.001, trainingIterations,
     )
     await timeSeriesModel.train()
     const predictedNextBars = await timeSeriesModel.predictNextBars()

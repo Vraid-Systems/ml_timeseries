@@ -5,7 +5,56 @@ const YahooFinanceHistoricalData = require('./YahooFinanceHistoricalData')
 
 jest.mock('axios', () => ({
     get: jest.fn(() => ({
-        data: [],
+        data: {
+            chart: {
+                result: [{
+                    meta: {
+                        currency: 'USD',
+                        symbol: 'BEP',
+                        exchangeName: 'NYQ',
+                        instrumentType: 'EQUITY',
+                        firstTradeDate: 1132065000,
+                        regularMarketTime: 1597435201,
+                        gmtoffset: -14400,
+                        timezone: 'EDT',
+                        exchangeTimezoneName: 'America/New_York',
+                        regularMarketPrice: 43.4,
+                        chartPreviousClose: 43.75,
+                        previousClose: 43.75,
+                        scale: 3,
+                        priceHint: 2,
+                        currentTradingPeriod: {
+                            pre: {
+                                timezone: 'EDT', start: 1597392000, end: 1597411800, gmtoffset: -14400,
+                            },
+                            regular: {
+                                timezone: 'EDT', start: 1597411800, end: 1597435200, gmtoffset: -14400,
+                            },
+                            post: {
+                                timezone: 'EDT', start: 1597435200, end: 1597449600, gmtoffset: -14400,
+                            },
+                        },
+                        tradingPeriods: [[{
+                            timezone: 'EDT', start: 1597411800, end: 1597435200, gmtoffset: -14400,
+                        }]],
+                        dataGranularity: '1m',
+                        range: '1m',
+                        validRanges: ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', '10y', 'ytd', 'max'],
+                    },
+                    timestamp: [1597435140],
+                    indicators: {
+                        quote: [{
+                            high: [43.400001525878906],
+                            close: [43.349998474121094],
+                            open: [43.3849983215332],
+                            volume: [0],
+                            low: [43.349998474121094],
+                        }],
+                    },
+                }],
+                error: null,
+            },
+        },
     })),
 }))
 
@@ -15,17 +64,21 @@ describe('YahooFinanceHistoricalData', () => {
     })
 
     test('that get calls axios.get with the correct params', async () => {
-        const historicalData = new YahooFinanceHistoricalData(ItervalEnum.MINUTE_90, RangeEnum.DAY_5, 'NNN')
+        const yahooFinanceHistoricalData = new YahooFinanceHistoricalData(ItervalEnum.MINUTE_90, RangeEnum.DAY_5, 'NNN')
+        const historicalData = await yahooFinanceHistoricalData.get()
 
-        await historicalData.get()
-        expect(axios.get)
-            .toBeCalledTimes(1)
-        expect(axios.get.mock.calls[0][0])
-            .toEqual(expect.stringContaining('NNN'))
-        expect(axios.get.mock.calls[0][0])
-            .toEqual(expect.stringContaining('interval=90m'))
-        expect(axios.get.mock.calls[0][0])
-            .toEqual(expect.stringContaining('range=5d'))
+        expect(historicalData).not.toBeNull()
+        expect(historicalData.length).toBe(2)
+
+        expect(axios.get).toBeCalledTimes(2)
+
+        expect(axios.get.mock.calls[0][0]).toEqual(expect.stringContaining('NNN'))
+        expect(axios.get.mock.calls[0][0]).toEqual(expect.stringContaining('interval=90m'))
+        expect(axios.get.mock.calls[0][0]).toEqual(expect.stringContaining('range=5d'))
+
+        expect(axios.get.mock.calls[1][0]).toEqual(expect.stringContaining('NNN'))
+        expect(axios.get.mock.calls[1][0]).toEqual(expect.stringContaining('interval=1m'))
+        expect(axios.get.mock.calls[1][0]).toEqual(expect.stringContaining('range=1m'))
     })
 
     test('that raw data is processed into features', () => {
