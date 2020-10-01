@@ -11,10 +11,7 @@ COPY package-lock.json package-lock.json
 RUN apt-get update && apt-get install -y curl g++ make python && rm -rf /var/lib/apt/lists/* && npm ci --only=production && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | bash -s -- -b /usr/local/bin && /usr/local/bin/node-prune
 
 # Bundle app contents
-COPY public public/
 COPY src src/
 
-# By default this listens on TCP 3049
-EXPOSE 3049
 # Default execution of this container
 CMD node src/index.js

@@ -1,43 +1,141 @@
-const express = require('express')
 const fs = require('fs')
-const Prediction = require('./Prediction')
+const lodash = require('lodash')
 
-const basePredictionsPath = '/tmp/ml_trader/predictions'
+const MultiVariableTimeSeriesModel = require('./MultiVariableTimeSeriesModel')
 
-// regular prediction creation
-const watchlistCsv = process.env.WATCHLIST_CSV || ''
-const watchlist = watchlistCsv.split(',')
-watchlist.forEach((predictionCommand) => {
-    const prediction = new Prediction(predictionCommand, basePredictionsPath)
-    prediction.schedule()
-})
+const QuadencyHistoricalData = require('./QuadencyHistoricalData')
+const QuadencyItervalEnum = require('./QuadencyIntervalEnum')
 
-// serve predictions for viewing
-const app = express()
+const YahooFinanceHistoricalData = require('./YahooFinanceHistoricalData')
+const YahooFinanceIntervalEnum = require('./YahooFinanceIntervalEnum')
+const YahooFinanceRangeEnum = require('./YahooFinanceRangeEnum')
 
-app.use(express.static('public'))
+const apiDataFileLocation = '/tmp/ml_timeseries/api.json'
+const directoryLocation = '/tmp/ml_timeseries'
+const labeledFileLocation = '/tmp/ml_timeseries/labeled.json'
+const predictionFileLocation = '/tmp/ml_timeseries/prediction.json'
 
-app.get('/predictions', (req, res) => {
-    const predictions = {}
+const cryptoTickers = process.env.CRYPTO ? process.env.CRYPTO.split(',') : null
+const featureLabels = process.env.FEATURE_LABELS ? process.env.FEATURE_LABELS.split(',') : null
+const stockTicker = process.env.STOCK
 
-    const availablePredictedTickers = fs.readdirSync(basePredictionsPath)
+const predictTimeSeries = async (multiVariableInputData) => {
+    const timeSeriesModel = new MultiVariableTimeSeriesModel(
+        multiVariableInputData, 7, 0.001, 25,
+    )
+    await timeSeriesModel.train()
+    const predictedNextBars = await timeSeriesModel.predictNextBars()
 
-    availablePredictedTickers.forEach((availablePredictedTicker) => {
-        predictions[availablePredictedTicker] = {}
+    const predictedTimeSeries = []
+    for (let index = 0; index < predictedNextBars.length; index += 1) {
+        predictedTimeSeries.push(
+            [predictedNextBars[index].time].concat(predictedNextBars[index].features),
+        )
+    }
 
-        const predictionsForTickerBasePath = `${basePredictionsPath}/${availablePredictedTicker}`
-        const filenames = fs.readdirSync(predictionsForTickerBasePath)
+    return predictedTimeSeries
+}
 
-        console.log(`Found predictions ${filenames} for ${availablePredictedTicker}`)
+const writeObjectToOutputFile = async (objectToWrite, writeLocation) => {
+    const humanReadableJSON = JSON.stringify(objectToWrite, null, 4)
+    if (!fs.existsSync(directoryLocation)) {
+        fs.mkdirSync(directoryLocation)
+    }
+    return fs.writeFileSync(writeLocation, humanReadableJSON)
+}
 
-        filenames.forEach((filename) => {
-            const predictionJsonString = fs.readFileSync(`${predictionsForTickerBasePath}/${filename}`)
-            predictions[availablePredictedTicker][filename] = JSON.parse(predictionJsonString)
-        })
-    })
+const main = async () => {
+    if (cryptoTickers) {
+        const daysIn5Years = 1825
+        const quadencyHistoricalData = new QuadencyHistoricalData(
+            QuadencyItervalEnum.DAY_1, daysIn5Years, cryptoTickers,
+        )
+        const multiplePairHistoricalDescendingInTime = await quadencyHistoricalData.get()
 
-    res.set('Content-Type', 'application/json')
-    res.send(predictions)
-})
+        let leastNumberOfBars = Number.MAX_VALUE
+        lodash.forEach(
+            multiplePairHistoricalDescendingInTime,
+            (singlePairHistoricalData) => {
+                if (leastNumberOfBars > singlePairHistoricalData.length) {
+                    leastNumberOfBars = singlePairHistoricalData.length
+                }
+            },
+        )
 
-app.listen(3049, () => console.log(`HTTP listening on ${3049}`))
+        const multiplePairHistoricalAscendingInTime = lodash.map(
+            multiplePairHistoricalDescendingInTime, (singlePairHistoricalData, singlePairName) => {
+                const singlePairObj = {}
+                singlePairObj[singlePairName] = lodash.reverse(
+                    lodash.slice(singlePairHistoricalData, 0, leastNumberOfBars),
+                )
+                return singlePairObj
+            },
+        )
+
+        const multiDimensionFeatures = lodash.map(
+            multiplePairHistoricalAscendingInTime,
+            (singlePairHistoricalData) => Object.values(singlePairHistoricalData)[0],
+        )
+
+        const flattenedFeatureTimeSeries = []
+        const numberOfBars = multiDimensionFeatures[0].length
+        const numberOfTradingPairs = multiDimensionFeatures.length
+        for (let currentBar = 0; currentBar < numberOfBars; currentBar += 1) {
+            const featuresForBar = []
+
+            for (let currentTradingPair = 0;
+                currentTradingPair < numberOfTradingPairs;
+                currentTradingPair += 1) {
+                // eslint-disable-next-line prefer-destructuring
+                featuresForBar[0] = multiDimensionFeatures[currentTradingPair][currentBar][0]
+                const price = multiDimensionFeatures[currentTradingPair][currentBar][1]
+                featuresForBar.push(price)
+            }
+
+            flattenedFeatureTimeSeries.push(featuresForBar)
+        }
+
+        return writeObjectToOutputFile(flattenedFeatureTimeSeries, apiDataFileLocation)
+    }
+
+    if (featureLabels) {
+        const inputDataRaw = fs.readFileSync(predictionFileLocation)
+        const inputData = JSON.parse(inputDataRaw)
+
+        const outputData = lodash.map(
+            inputData,
+            (inputDataBar) => {
+                const features = inputDataBar[1]
+                const labeledObject = {}
+
+                for (let featureIndex = 0; featureIndex < features.length; featureIndex += 1) {
+                    labeledObject[featureLabels[featureIndex]] = features[featureIndex]
+                }
+
+                return [inputDataBar[0], labeledObject]
+            },
+        )
+
+        return writeObjectToOutputFile(outputData, labeledFileLocation)
+    }
+
+    if (stockTicker) {
+        const yahooFinanceHistoricalData = new YahooFinanceHistoricalData(
+            YahooFinanceIntervalEnum.DAY_1,
+            YahooFinanceRangeEnum.YEAR_5,
+            stockTicker,
+        )
+        const historicalStockTickerFeatures = await yahooFinanceHistoricalData.get()
+
+        return writeObjectToOutputFile(historicalStockTickerFeatures, apiDataFileLocation)
+    }
+
+    const inputDataRaw = fs.readFileSync(apiDataFileLocation)
+    const inputData = JSON.parse(inputDataRaw)
+
+    const predictedTimeSeries = await predictTimeSeries(inputData)
+
+    return writeObjectToOutputFile(predictedTimeSeries, predictionFileLocation)
+}
+
+main()

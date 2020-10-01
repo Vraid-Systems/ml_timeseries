@@ -2250,7 +2250,7 @@ describe('MultiVariableTimeSeriesModel', () => {
         ]
 
         const timeSeriesModel = new MultiVariableTimeSeriesModel(
-            historialBEPTickerData, 8, 0.001, 10,
+            historialBEPTickerData, 4, 0.01, 1,
         )
         await timeSeriesModel.train()
         const predictedNextBars = await timeSeriesModel.predictNextBars()
@@ -2269,7 +2269,7 @@ describe('MultiVariableTimeSeriesModel', () => {
         )
 
         const btcUsdPairData = lodash.reverse(parsedHistoricalBtcData['BTC/USD'])
-        const timeSeriesModel = new MultiVariableTimeSeriesModel(btcUsdPairData, 8, 0.01, 5)
+        const timeSeriesModel = new MultiVariableTimeSeriesModel(btcUsdPairData, 4, 0.01, 1)
         await timeSeriesModel.train()
         const predictedNextBars = await timeSeriesModel.predictNextBars()
 

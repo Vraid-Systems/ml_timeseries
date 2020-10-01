@@ -4,19 +4,19 @@ const tf = require('@tensorflow/tfjs-node')
 class MultiVariableTimeSeriesModel {
     constructor(
         ascendingHistoricalData,
-        barsToPredict = 8,
+        barsToPredict = 4,
         learningRate = 0.001,
-        trainingIterations = 30,
+        trainingIterations = 25,
     ) {
         this.barsToPredict = barsToPredict
         this.learningLookBack = 1
         this.learningRate = learningRate
-        this.lstmNeuronFactor = 4
         this.model = tf.sequential()
-        this.numberOfBarsToBasePredictionOn = this.barsToPredict * 4
+        this.normalizationInputMax = 0
+        this.normalizationInputMin = 0
+        this.normalizationOutputMax = 0
+        this.normalizationOutputMin = 0
         this.numberOfFeatureVariables = ascendingHistoricalData[0].length - 1
-        this.outputMax = 0
-        this.outputMin = 0
         this.positionOfTimeFeature = 0
         this.trainingIterations = trainingIterations
 
@@ -26,16 +26,10 @@ class MultiVariableTimeSeriesModel {
         this.numberOfSplits = Math.floor(
             (
                 this.historicalData.length - this.learningLookBack
-            ) / this.numberOfBarsToBasePredictionOn,
+            ) / this.barsToPredict,
         )
-        this.splitTrainingDataLength = this.numberOfSplits * this.numberOfBarsToBasePredictionOn
+        this.splitTrainingDataLength = this.numberOfSplits * this.barsToPredict
         this.trainingData = lodash.cloneDeep(this.historicalData)
-    }
-
-    denormalizeBackToProblemSpace(normalizedPredictionTensor) {
-        return normalizedPredictionTensor.mul(
-            this.outputMax.sub(this.outputMin),
-        ).add(this.outputMin)
     }
 
     getNormalizedTrainingTensors() {
@@ -46,11 +40,8 @@ class MultiVariableTimeSeriesModel {
                 ) => currentIndexInTuple !== this.positionOfTimeFeature,
             ),
         )
-        const trainingFeaturesTensor = tf.tensor(filteredTrainingData)
-        this.outputMax = trainingFeaturesTensor.max()
-        this.outputMin = trainingFeaturesTensor.min()
 
-        const trainingTensorPriceX = tf.stack(
+        const trainingTensorX = tf.stack(
             tf.split(
                 tf.tensor2d(
                     filteredTrainingData.slice(
@@ -64,17 +55,12 @@ class MultiVariableTimeSeriesModel {
         ).reshape(
             [
                 this.numberOfSplits,
-                this.numberOfBarsToBasePredictionOn,
+                this.barsToPredict,
                 this.numberOfFeatureVariables,
             ],
         )
-        const normalizedX = trainingTensorPriceX.sub(
-            this.outputMin,
-        ).div(
-            this.outputMax.sub(this.outputMin),
-        )
 
-        const trainingTensorPriceY = tf.stack(
+        const trainingTensorY = tf.stack(
             tf.split(
                 tf.tensor2d(
                     filteredTrainingData.slice(
@@ -88,17 +74,24 @@ class MultiVariableTimeSeriesModel {
         ).reshape(
             [
                 this.numberOfSplits,
-                this.numberOfBarsToBasePredictionOn,
+                this.barsToPredict,
                 this.numberOfFeatureVariables,
             ],
         )
-        const normalizedY = trainingTensorPriceY.sub(
-            this.outputMin,
-        ).div(
-            this.outputMax.sub(this.outputMin),
-        )
 
-        return [normalizedX, normalizedY]
+        this.normalizationInputMax = trainingTensorX.max()
+        this.normalizationInputMin = trainingTensorX.min()
+        this.normalizationOutputMax = trainingTensorY.max()
+        this.normalizationOutputMin = trainingTensorY.min()
+
+        const normalizedTensorX = trainingTensorX.sub(
+            this.normalizationInputMin,
+        ).div(this.normalizationInputMax.sub(this.normalizationInputMin))
+        const normalizedTensorY = trainingTensorY.sub(
+            this.normalizationOutputMin,
+        ).div(this.normalizationOutputMax.sub(this.normalizationOutputMin))
+
+        return [normalizedTensorX, normalizedTensorY]
     }
 
     async predict(data) {
@@ -106,14 +99,16 @@ class MultiVariableTimeSeriesModel {
             [1, data.length, data[0].length],
         )
 
-        const normalizedPredictionResultTensor = this.model.predict(
+        const normalizedPredictionTensor = this.model.predict(
             predictionInputTensor,
         )
-        const problemRangePredictionTensor = this.denormalizeBackToProblemSpace(
-            normalizedPredictionResultTensor,
-        )
+
+        const problemRangePredictionTensor = normalizedPredictionTensor.mul(
+            this.normalizationOutputMax.sub(this.normalizationOutputMin),
+        ).add(this.normalizationOutputMin)
+
         const problemRangePrediction = await problemRangePredictionTensor.array()
-        return problemRangePrediction[0][0]
+        return problemRangePrediction[0]
     }
 
     async predictNextBars() {
@@ -130,27 +125,19 @@ class MultiVariableTimeSeriesModel {
                 ) => currentIndexInTuple !== this.positionOfTimeFeature,
             ),
         )
-        const mostRecentValues = historicalFeatureValues.slice(
-            historicalFeatureValues.length - this.numberOfBarsToBasePredictionOn,
+        const featureTuplesToPredictFrom = historicalFeatureValues.slice(
+            historicalFeatureValues.length - this.barsToPredict,
             historicalFeatureValues.length,
         )
 
-        const timesToPredict = []
-        for (let nextBarNumber = 1; nextBarNumber <= this.barsToPredict; nextBarNumber += 1) {
-            const nextTimeBar = mostRecentTimeBar + (barSize * nextBarNumber)
-            timesToPredict.push(nextTimeBar)
-
-            // eslint-disable-next-line no-await-in-loop
-            const mostRecentValue = await this.predict(mostRecentValues)
-            mostRecentValues.push(mostRecentValue)
-            mostRecentValues.shift()
-        }
+        const predictedFeatureTuples = await this.predict(featureTuplesToPredictFrom)
 
         const predictedNextBars = []
-        for (let index = 0; index < timesToPredict.length; index += 1) {
+        for (let index = 0; index < this.barsToPredict; index += 1) {
+            const nextBarNumber = index + 1
             predictedNextBars.push({
-                time: timesToPredict[index],
-                features: mostRecentValues[index],
+                time: mostRecentTimeBar + (barSize * nextBarNumber),
+                features: predictedFeatureTuples[index],
             })
         }
 
@@ -159,14 +146,19 @@ class MultiVariableTimeSeriesModel {
 
     async train() {
         this.model.add(tf.layers.lstm({
-            inputShape: [this.numberOfBarsToBasePredictionOn, this.numberOfFeatureVariables],
+            inputShape: [this.barsToPredict, this.numberOfFeatureVariables],
             returnSequences: true,
-            units: this.lstmNeuronFactor,
+            units: 256,
         }))
 
         this.model.add(tf.layers.lstm({
             returnSequences: true,
-            units: this.lstmNeuronFactor,
+            units: 256,
+        }))
+
+        this.model.add(tf.layers.lstm({
+            returnSequences: true,
+            units: 256,
         }))
 
         this.model.add(tf.layers.dense({
@@ -183,11 +175,11 @@ class MultiVariableTimeSeriesModel {
             tensorX,
             tensorY,
             {
-                batchSize: 32,
+                batchSize: 1, // 1 sample at a time to make sure exact previous bars imply next bars
                 epochs: this.trainingIterations,
-                shuffle: true,
-                validationSplit: 0.2,
-                verbose: 0,
+                shuffle: false, // time series order matters!
+                validationSplit: 0.15,
+                verbose: 1,
             },
         )
 
