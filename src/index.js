@@ -105,11 +105,10 @@ const main = async () => {
         const outputData = lodash.map(
             inputData,
             (inputDataBar) => {
-                const features = inputDataBar[1]
                 const labeledObject = {}
 
-                for (let featureIndex = 0; featureIndex < features.length; featureIndex += 1) {
-                    labeledObject[featureLabels[featureIndex]] = features[featureIndex]
+                for (let featureIndex = 0; featureIndex < featureLabels.length; featureIndex += 1) {
+                    labeledObject[featureLabels[featureIndex]] = inputDataBar[featureIndex + 1]
                 }
 
                 return [inputDataBar[0], labeledObject]
