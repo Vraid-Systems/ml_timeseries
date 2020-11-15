@@ -18,7 +18,9 @@ Create model input data file from Yahoo Finance stock ticker API for particular 
 
 Train multi variable time series model against input data and output prediction of values in the original problem space:
 
-`docker run --volume /local/path/to/api.json:/tmp/ml_timeseries/api.json --volume /local/path/to/prediction.json:/tmp/ml_timeseries/prediction.json docker.pkg.github.com/vraid-systems/ml_timeseries/main:2.0.0`
+`docker run --env MODEL=lstm --volume /local/path/to/api.json:/tmp/ml_timeseries/api.json --volume /local/path/to/prediction.json:/tmp/ml_timeseries/prediction.json docker.pkg.github.com/vraid-systems/ml_timeseries/main:2.0.0`
+
+Note that `MODEL` can be `arima` or `lstm`.
 
 
 Label the predicted features:

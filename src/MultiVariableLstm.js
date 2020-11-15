@@ -1,7 +1,7 @@
 const lodash = require('lodash')
 const tf = require('@tensorflow/tfjs-node')
 
-class MultiVariableTimeSeriesModel {
+class MultiVariableLstm {
     constructor(
         ascendingHistoricalData,
         barsToPredict = 4,
@@ -23,6 +23,14 @@ class MultiVariableTimeSeriesModel {
         this.historicalData = ascendingHistoricalData.filter(
             (currentElement) => (currentElement.length - 1) === this.numberOfFeatureVariables,
         )
+        this.historicalFeatureValues = this.historicalData.map(
+            (currentFeatureTuple) => currentFeatureTuple.filter(
+                (
+                    currentElementInTuple, currentIndexInTuple,
+                ) => currentIndexInTuple !== this.positionOfTimeFeature,
+            ),
+        )
+
         this.numberOfSplits = Math.floor(
             (
                 this.historicalData.length - this.learningLookBack
@@ -118,16 +126,9 @@ class MultiVariableTimeSeriesModel {
         const barSize = Math.abs(historicalTimeBars[1] - historicalTimeBars[0])
         const mostRecentTimeBar = historicalTimeBars[historicalTimeBars.length - 1]
 
-        const historicalFeatureValues = this.historicalData.map(
-            (currentFeatureTuple) => currentFeatureTuple.filter(
-                (
-                    currentElementInTuple, currentIndexInTuple,
-                ) => currentIndexInTuple !== this.positionOfTimeFeature,
-            ),
-        )
-        const featureTuplesToPredictFrom = historicalFeatureValues.slice(
-            historicalFeatureValues.length - this.barsToPredict,
-            historicalFeatureValues.length,
+        const featureTuplesToPredictFrom = this.historicalFeatureValues.slice(
+            this.historicalFeatureValues.length - this.barsToPredict,
+            this.historicalFeatureValues.length,
         )
 
         const predictedFeatureTuples = await this.predict(featureTuplesToPredictFrom)
@@ -190,4 +191,4 @@ class MultiVariableTimeSeriesModel {
     }
 }
 
-module.exports = MultiVariableTimeSeriesModel
+module.exports = MultiVariableLstm

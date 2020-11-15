@@ -1,7 +1,8 @@
 const fs = require('fs')
 const lodash = require('lodash')
 
-const MultiVariableTimeSeriesModel = require('./MultiVariableTimeSeriesModel')
+const MultiVariableArima = require('./MultiVariableArima')
+const MultiVariableLstm = require('./MultiVariableLstm')
 
 const QuadencyHistoricalData = require('./QuadencyHistoricalData')
 const QuadencyItervalEnum = require('./QuadencyIntervalEnum')
@@ -17,13 +18,20 @@ const predictionFileLocation = '/tmp/ml_timeseries/prediction.json'
 
 const cryptoTickers = process.env.CRYPTO ? process.env.CRYPTO.split(',') : null
 const featureLabels = process.env.FEATURE_LABELS ? process.env.FEATURE_LABELS.split(',') : null
+const model = process.env.MODEL ? process.env.MODEL.toLowerCase() : 'arima'
 const stockTicker = process.env.STOCK
 
 const predictTimeSeries = async (multiVariableInputData) => {
-    const timeSeriesModel = new MultiVariableTimeSeriesModel(
-        multiVariableInputData, 7, 0.001, 25,
+    let timeSeriesModel = new MultiVariableArima(
+        multiVariableInputData, 7,
     )
-    await timeSeriesModel.train()
+    if (model === 'lstm') {
+        timeSeriesModel = new MultiVariableLstm(
+            multiVariableInputData, 7, 0.001, 25,
+        )
+        await timeSeriesModel.train()
+    }
+
     const predictedNextBars = await timeSeriesModel.predictNextBars()
 
     const predictedTimeSeries = []
@@ -36,8 +44,11 @@ const predictTimeSeries = async (multiVariableInputData) => {
     return predictedTimeSeries
 }
 
-const writeObjectToOutputFile = async (objectToWrite, writeLocation) => {
-    const humanReadableJSON = JSON.stringify(objectToWrite, null, 4)
+const writeObjectToOutputFile = async (objectToWrite, writeLocation, prefixString = null) => {
+    let humanReadableJSON = JSON.stringify(objectToWrite, null, 4)
+    if (prefixString) {
+        humanReadableJSON = prefixString + humanReadableJSON
+    }
     if (!fs.existsSync(directoryLocation)) {
         fs.mkdirSync(directoryLocation)
     }
@@ -105,23 +116,24 @@ const main = async () => {
         const predictionDataRaw = fs.readFileSync(predictionFileLocation)
         const predictionData = JSON.parse(predictionDataRaw)
 
+        let labelPostfix = 'actual'
         const labelData = (inputDataBar) => {
             const labeledObject = {}
 
             for (let featureIndex = 0; featureIndex < featureLabels.length; featureIndex += 1) {
-                labeledObject[featureLabels[featureIndex]] = inputDataBar[featureIndex + 1]
+                labeledObject[`${featureLabels[featureIndex]} ${labelPostfix}`] = inputDataBar[featureIndex + 1]
             }
 
             return [inputDataBar[0], labeledObject]
         }
-
         const labeledApiData = lodash.map(apiData, labelData)
-
+        labelPostfix = 'predicted'
         const labeledPredictionData = lodash.map(predictionData, labelData)
 
         return writeObjectToOutputFile(
             labeledApiData.concat(labeledPredictionData),
             labeledFileLocation,
+            'const labeledData = ',
         )
     }
 

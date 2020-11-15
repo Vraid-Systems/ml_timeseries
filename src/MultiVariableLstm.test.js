@@ -1,8 +1,8 @@
 const lodash = require('lodash')
-const MultiVariableTimeSeriesModel = require('./MultiVariableTimeSeriesModel')
+const MultiVariableLstm = require('./MultiVariableLstm')
 const QuadencyHistoricalData = require('./QuadencyHistoricalData')
 
-describe('MultiVariableTimeSeriesModel', () => {
+describe('MultiVariableLstm', () => {
     jest.setTimeout(900000) // 15 minutes
 
     test('predicting the next multivariable bars completes', async () => {
@@ -2249,7 +2249,7 @@ describe('MultiVariableTimeSeriesModel', () => {
             ],
         ]
 
-        const timeSeriesModel = new MultiVariableTimeSeriesModel(
+        const timeSeriesModel = new MultiVariableLstm(
             historialBEPTickerData, 4, 0.01, 1,
         )
         await timeSeriesModel.train()
@@ -2269,7 +2269,7 @@ describe('MultiVariableTimeSeriesModel', () => {
         )
 
         const btcUsdPairData = lodash.reverse(parsedHistoricalBtcData['BTC/USD'])
-        const timeSeriesModel = new MultiVariableTimeSeriesModel(btcUsdPairData, 4, 0.01, 1)
+        const timeSeriesModel = new MultiVariableLstm(btcUsdPairData, 4, 0.01, 1)
         await timeSeriesModel.train()
         const predictedNextBars = await timeSeriesModel.predictNextBars()
 
