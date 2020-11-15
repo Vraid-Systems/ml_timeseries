@@ -99,23 +99,30 @@ const main = async () => {
     }
 
     if (featureLabels) {
-        const inputDataRaw = fs.readFileSync(predictionFileLocation)
-        const inputData = JSON.parse(inputDataRaw)
+        const apiDataRaw = fs.readFileSync(apiDataFileLocation)
+        const apiData = JSON.parse(apiDataRaw)
 
-        const outputData = lodash.map(
-            inputData,
-            (inputDataBar) => {
-                const labeledObject = {}
+        const predictionDataRaw = fs.readFileSync(predictionFileLocation)
+        const predictionData = JSON.parse(predictionDataRaw)
 
-                for (let featureIndex = 0; featureIndex < featureLabels.length; featureIndex += 1) {
-                    labeledObject[featureLabels[featureIndex]] = inputDataBar[featureIndex + 1]
-                }
+        const labelData = (inputDataBar) => {
+            const labeledObject = {}
 
-                return [inputDataBar[0], labeledObject]
-            },
+            for (let featureIndex = 0; featureIndex < featureLabels.length; featureIndex += 1) {
+                labeledObject[featureLabels[featureIndex]] = inputDataBar[featureIndex + 1]
+            }
+
+            return [inputDataBar[0], labeledObject]
+        }
+
+        const labeledApiData = lodash.map(apiData, labelData)
+
+        const labeledPredictionData = lodash.map(predictionData, labelData)
+
+        return writeObjectToOutputFile(
+            labeledApiData.concat(labeledPredictionData),
+            labeledFileLocation,
         )
-
-        return writeObjectToOutputFile(outputData, labeledFileLocation)
     }
 
     if (stockTicker) {
