@@ -27,7 +27,7 @@ const predictTimeSeries = async (multiVariableInputData) => {
     )
     if (model === 'lstm') {
         timeSeriesModel = new MultiVariableLstm(
-            multiVariableInputData, 7, 0.001, 25,
+            multiVariableInputData, 7, 0.001, 50,
         )
         await timeSeriesModel.train()
     }
