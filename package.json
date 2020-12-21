@@ -1,6 +1,6 @@
 {
   "name": "ml_timeseries",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "main": "src/index.js",
   "scripts": {
     "docker:build": "docker build --tag docker.pkg.github.com/vraid-systems/ml_timeseries/main:`cat DOCKER_IMAGE_VERSION` .",
@@ -10,6 +10,7 @@
     "test": "jest src/"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^4.8.1",
     "@tensorflow/tfjs-node": "^2.0.1",
     "arima": "0.1.0",
     "array-smooth": "^1.0.0",
