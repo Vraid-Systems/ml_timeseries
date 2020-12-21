@@ -23,11 +23,11 @@ const stockTicker = process.env.STOCK
 
 const predictTimeSeries = async (multiVariableInputData) => {
     let timeSeriesModel = new MultiVariableArima(
-        multiVariableInputData, 7,
+        multiVariableInputData, 21,
     )
     if (model === 'lstm') {
         timeSeriesModel = new MultiVariableLstm(
-            multiVariableInputData, 7, 0.001, 50,
+            multiVariableInputData, 21, 0.001, 40,
         )
         await timeSeriesModel.train()
     }
