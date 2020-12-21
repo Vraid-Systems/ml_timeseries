@@ -7,7 +7,8 @@
     "docker:publish": "docker push docker.pkg.github.com/vraid-systems/ml_timeseries/main:`cat DOCKER_IMAGE_VERSION`",
     "lint": "eslint src",
     "start": "node src/index.js",
-    "test": "jest src/"
+    "test": "jest src/",
+    "test:ci": "jest src/ --testPathIgnorePatterns=Lstm"
   },
   "dependencies": {
     "@google-cloud/firestore": "^4.8.1",
