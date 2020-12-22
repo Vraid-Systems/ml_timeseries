@@ -21,7 +21,6 @@ class Prediction {
         this.modelToRun = modelToRun
         this.parentObjects = parentObjects
         this.parentObjectsCleaned = this.parentObjects.map((ticker) => ticker.replace('CRYPTO:', '').replace('STOCK:', '').replace('USD=X', ''))
-        this.parentObjectId = this.parentObjectsCleaned.toString()
     }
 
     async calculatePrediction() {
@@ -180,21 +179,25 @@ class Prediction {
             projectId: 'ml-timeseries',
         })
 
-        const firestoreFormatter = (inputDataBar, labelPostfix, writeBatch) => {
+        const firestoreFormatter = (inputDataBar, isHistorical, writeBatch) => {
             for (
                 let featureIndex = 0;
                 featureIndex < this.parentObjectsCleaned.length;
                 featureIndex += 1
             ) {
                 const occurrenceTime = inputDataBar[0]
-                const featureName = this.parentObjectsCleaned[featureIndex]
-                const featureText = `${featureName} ${labelPostfix}`
-                const featureValue = inputDataBar[featureIndex + 1]
-                const firestoreDocId = `${this.createdTime}-${featureName.replace('/', '')}-${occurrenceTime}`
 
-                const predictionRef = firestore.collection('predictions').doc(firestoreDocId)
+                const featureName = this.parentObjectsCleaned[featureIndex]
+                const featureText = `${featureName} ${isHistorical ? 'historical' : 'predicted'}`
+                const featureValue = inputDataBar[featureIndex + 1]
+
+                const firestoreFeatureName = featureName.replace('/', '')
+                const firestoreDocId = isHistorical ? `${firestoreFeatureName}-${occurrenceTime}` : `${firestoreFeatureName}-${this.createdTime}-${occurrenceTime}`
+
+                const predictionRef = firestore.collection(firestoreFeatureName).doc(firestoreDocId)
                 writeBatch.set(predictionRef, {
                     created: this.createdTime,
+                    isHistorical,
                     label: featureText,
                     parentObjectId: featureName,
                     time: occurrenceTime,
@@ -212,7 +215,7 @@ class Prediction {
             const writeBatch = firestore.batch()
 
             const writeData = (inputDataBar) => {
-                firestoreFormatter(inputDataBar, 'actual', writeBatch)
+                firestoreFormatter(inputDataBar, true, writeBatch)
             }
             lodash.forEach(firestoreChunkedApiData[chunkIndex], writeData)
 
@@ -229,7 +232,7 @@ class Prediction {
             const writeBatch = firestore.batch()
 
             const writeData = (inputDataBar) => {
-                firestoreFormatter(inputDataBar, 'predicted', writeBatch)
+                firestoreFormatter(inputDataBar, false, writeBatch)
             }
             lodash.forEach(firestoreChunkedPredictionData[chunkIndex], writeData)
 
