@@ -199,6 +199,7 @@ class Prediction {
                     created: this.createdTime,
                     isHistorical,
                     label: featureText,
+                    orderedId: `${this.createdTime}-${occurrenceTime}`,
                     parentObjectId: featureName,
                     time: occurrenceTime,
                     value: featureValue,
@@ -239,6 +240,23 @@ class Prediction {
             // eslint-disable-next-line no-await-in-loop
             await writeBatch.commit()
         }
+
+        const writeBatch = firestore.batch()
+        for (
+            let featureIndex = 0;
+            featureIndex < this.parentObjectsCleaned.length;
+            featureIndex += 1
+        ) {
+            const featureName = this.parentObjectsCleaned[featureIndex]
+            const firestoreFeatureName = featureName.replace('/', '')
+
+            const predictionRef = firestore.collection('Prediction').doc(`${firestoreFeatureName}-${this.createdTime}`)
+            writeBatch.set(predictionRef, {
+                created: this.createdTime,
+                parentObjectId: featureName,
+            })
+        }
+        await writeBatch.commit()
     }
 }
 
