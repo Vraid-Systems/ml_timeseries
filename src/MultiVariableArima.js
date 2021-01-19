@@ -46,8 +46,18 @@ class MultiVariableArima {
                 getFeatureByPosition(this.historicalFeatureValues, index),
                 this.barsToPredict,
                 {
-                    auto: true,
+                    auto: false,
+                    method: 0,
+                    optimizer: 5,
+                    transpose: false,
                     verbose: true,
+                    p: 2,
+                    d: 1,
+                    q: 2,
+                    P: 1,
+                    D: 0,
+                    Q: 1,
+                    s: 21,
                 },
             )
             allFeaturePredictions.push(singleFeaturePredictions)
