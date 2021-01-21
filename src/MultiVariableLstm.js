@@ -149,17 +149,17 @@ class MultiVariableLstm {
         this.model.add(tf.layers.lstm({
             inputShape: [this.barsToPredict, this.numberOfFeatureVariables],
             returnSequences: true,
-            units: 256,
+            units: 128,
         }))
 
         this.model.add(tf.layers.lstm({
             returnSequences: true,
-            units: 256,
+            units: 128,
         }))
 
         this.model.add(tf.layers.lstm({
             returnSequences: true,
-            units: 256,
+            units: 128,
         }))
 
         this.model.add(tf.layers.dense({
@@ -176,10 +176,10 @@ class MultiVariableLstm {
             tensorX,
             tensorY,
             {
-                batchSize: 1, // 1 sample at a time to make sure exact previous bars imply next bars
+                batchSize: 32,
                 epochs: this.trainingIterations,
                 shuffle: false, // time series order matters!
-                validationSplit: 0.15,
+                validationSplit: 0.3,
                 verbose: 1,
             },
         )

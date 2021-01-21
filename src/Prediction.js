@@ -31,11 +31,11 @@ class Prediction {
         const apiData = await this.getApiData()
 
         let timeSeriesModel = new MultiVariableArima(
-            apiData, 21,
+            apiData, 42,
         )
         if (this.modelToRun === 'lstm') {
             timeSeriesModel = new MultiVariableLstm(
-                apiData, 21, 0.001, 40,
+                apiData, 42, 0.001, 42,
             )
             await timeSeriesModel.train()
         }

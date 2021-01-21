@@ -123,6 +123,6 @@ describe('Prediction', () => {
         const predictionData = await prediction.calculatePrediction()
 
         expect(predictionData).not.toBeNull()
-        expect(predictionData.length).toBe(21)
+        expect(predictionData.length).toBe(42)
     })
 })
