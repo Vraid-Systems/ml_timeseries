@@ -57,7 +57,7 @@ class MultiVariableArima {
                     P: 1,
                     D: 0,
                     Q: 1,
-                    s: 21,
+                    s: 8,
                 },
             )
             allFeaturePredictions.push(singleFeaturePredictions)
