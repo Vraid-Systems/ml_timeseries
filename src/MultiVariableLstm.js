@@ -9,7 +9,7 @@ class MultiVariableLstm {
         trainingIterations = 25,
     ) {
         this.barsToPredict = barsToPredict
-        this.learningLookBack = 1
+        this.learningLookBack = this.barsToPredict * 3
         this.learningRate = learningRate
         this.model = tf.sequential()
         this.normalizationInputMax = 0
@@ -147,19 +147,22 @@ class MultiVariableLstm {
 
     async train() {
         this.model.add(tf.layers.lstm({
+            dropout: 0.3,
             inputShape: [this.barsToPredict, this.numberOfFeatureVariables],
             returnSequences: true,
-            units: 128,
+            units: 256,
         }))
 
         this.model.add(tf.layers.lstm({
+            dropout: 0.3,
             returnSequences: true,
-            units: 128,
+            units: 256,
         }))
 
         this.model.add(tf.layers.lstm({
+            dropout: 0.3,
             returnSequences: true,
-            units: 128,
+            units: 256,
         }))
 
         this.model.add(tf.layers.dense({

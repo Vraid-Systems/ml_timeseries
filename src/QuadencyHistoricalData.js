@@ -7,7 +7,6 @@ class QuadencyHistoricalData {
         this.evenNumberOfBarsBack = 2 * Math.round(evenNumberOfBarsBack / 2)
         this.intervalEnum = intervalEnum
         this.pairsArray = pairsArray
-        this.smallestIntervalEnum = ItervalEnum.MINUTE_1
     }
 
     async get() {
@@ -38,7 +37,7 @@ QuadencyHistoricalData.smoothQuadencyNumerics = (data) => {
     Object.keys(data).forEach((tradingPair) => {
         smoothedPricesForTradingPair[tradingPair] = arraySmooth(
             data[tradingPair],
-            8,
+            16,
             (timePriceTuple) => timePriceTuple[1],
         )
     })
