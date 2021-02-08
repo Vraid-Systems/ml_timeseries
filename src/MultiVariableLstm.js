@@ -9,7 +9,7 @@ class MultiVariableLstm {
         trainingIterations = 25,
     ) {
         this.barsToPredict = barsToPredict
-        this.learningLookBack = this.barsToPredict * 3
+        this.learningLookBack = this.barsToPredict * 2
         this.learningRate = learningRate
         this.model = tf.sequential()
         this.normalizationInputMax = 0
