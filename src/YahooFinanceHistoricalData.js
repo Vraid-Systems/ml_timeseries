@@ -30,19 +30,19 @@ YahooFinanceHistoricalData.processIntoFeatures = (data) => {
         Math.abs(secondsFromUnixEpochTimestamps[1] - secondsFromUnixEpochTimestamps[0]),
     ) * 1000
 
-    const candleOpenPrices = arraySmooth(featureObj.indicators.quote[0].open, 21)
+    const candleClosePrices = arraySmooth(featureObj.indicators.quote[0].close, 21)
     const candleVolumes = arraySmooth(featureObj.indicators.quote[0].volume, 21)
 
     const currentTimestamp = new Date().getTime()
 
     for (
         let index = 0;
-        index < candleOpenPrices.length;
+        index < candleClosePrices.length;
         index += 1
     ) {
         featureTuples.push([
             currentTimestamp - (index * minimumMillisBarLength),
-            candleOpenPrices[candleOpenPrices.length - 1 - index],
+            candleClosePrices[candleClosePrices.length - 1 - index],
             candleVolumes[candleVolumes.length - 1 - index],
         ])
     }
