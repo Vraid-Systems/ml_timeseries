@@ -1,5 +1,6 @@
 const arraySmooth = require('array-smooth')
 const axios = require('axios')
+require('core-js')
 const lodash = require('lodash')
 const IntervalEnum = require('./QuadencyIntervalEnum')
 

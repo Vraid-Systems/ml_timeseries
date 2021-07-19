@@ -48,16 +48,16 @@ class MultiVariableArima {
                 {
                     auto: false,
                     method: 0,
-                    optimizer: 5,
+                    optimizer: 6,
                     transpose: false,
                     verbose: true,
-                    p: 2,
+                    p: 4,
                     d: 1,
-                    q: 2,
-                    P: 1,
+                    q: 0,
+                    P: 0,
                     D: 0,
-                    Q: 1,
-                    s: 8,
+                    Q: 0,
+                    s: 0,
                 },
             )
             allFeaturePredictions.push(singleFeaturePredictions)

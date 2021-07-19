@@ -31,7 +31,6 @@ YahooFinanceHistoricalData.processIntoFeatures = (data) => {
     ) * 1000
 
     const candleClosePrices = arraySmooth(featureObj.indicators.quote[0].close, 21)
-    const candleVolumes = arraySmooth(featureObj.indicators.quote[0].volume, 21)
 
     const currentTimestamp = new Date().getTime()
 
@@ -43,7 +42,6 @@ YahooFinanceHistoricalData.processIntoFeatures = (data) => {
         featureTuples.push([
             currentTimestamp - (index * minimumMillisBarLength),
             candleClosePrices[candleClosePrices.length - 1 - index],
-            candleVolumes[candleVolumes.length - 1 - index],
         ])
     }
 

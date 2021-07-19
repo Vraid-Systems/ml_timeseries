@@ -9,9 +9,11 @@ class MultiVariableLstm {
         trainingIterations = 25,
     ) {
         this.barsToPredict = barsToPredict
-        this.learningLookBack = Math.floor(this.barsToPredict * 1.5)
+        this.dropout = 0.1
+        this.learningLookBack = 1
         this.learningRate = learningRate
         this.model = tf.sequential()
+        this.neurons = 64
         this.normalizationInputMax = 0
         this.normalizationInputMin = 0
         this.normalizationOutputMax = 0
@@ -147,22 +149,28 @@ class MultiVariableLstm {
 
     async train() {
         this.model.add(tf.layers.lstm({
-            dropout: 0.3,
+            dropout: this.dropout,
             inputShape: [this.barsToPredict, this.numberOfFeatureVariables],
             returnSequences: true,
-            units: 256,
+            units: this.neurons,
         }))
 
         this.model.add(tf.layers.lstm({
-            dropout: 0.3,
+            dropout: this.dropout,
             returnSequences: true,
-            units: 256,
+            units: this.neurons,
         }))
 
         this.model.add(tf.layers.lstm({
-            dropout: 0.3,
+            dropout: this.dropout,
             returnSequences: true,
-            units: 256,
+            units: this.neurons,
+        }))
+
+        this.model.add(tf.layers.lstm({
+            dropout: this.dropout,
+            returnSequences: true,
+            units: this.neurons,
         }))
 
         this.model.add(tf.layers.dense({
@@ -171,7 +179,7 @@ class MultiVariableLstm {
 
         this.model.compile({
             loss: 'meanSquaredError',
-            optimizer: tf.train.adam(this.learningRate),
+            optimizer: tf.train.rmsprop(this.learningRate),
         })
 
         const [tensorX, tensorY] = this.getNormalizedTrainingTensors()
