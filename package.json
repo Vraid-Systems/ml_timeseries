@@ -13,7 +13,7 @@
   "dependencies": {
     "@google-cloud/firestore": "^4.11.0",
     "@tensorflow/tfjs-node": "^3.6.1",
-    "arima": "^0.2.1",
+    "arima": "^0.2.2",
     "array-smooth": "^1.0.0",
     "axios": "^0.21.1",
     "core-js": "^3.15.2",
@@ -21,11 +21,11 @@
     "node-fetch": "^2.6.1"
   },
   "devDependencies": {
-    "eslint": "^7.26.0",
+    "eslint": "^7.31.0",
     "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.22.1",
-    "jest": "^26.6.3",
-    "node-notifier": "^9.0.1"
+    "eslint-plugin-import": "^2.23.4",
+    "jest": "^27.0.6",
+    "node-notifier": "^10.0.0"
   },
   "jest": {
     "testPathIgnorePatterns": [
