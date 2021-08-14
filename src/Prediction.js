@@ -168,15 +168,15 @@ class Prediction {
             credentials: {
                 auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
                 auth_uri: 'https://accounts.google.com/o/oauth2/auth',
-                client_email: 'creator@ml-timeseries.iam.gserviceaccount.com',
-                client_id: '113933008067112298322',
-                client_x509_cert_url: 'https://www.googleapis.com/robot/v1/metadata/x509/creator%40ml-timeseries.iam.gserviceaccount.com',
-                private_key: '-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDGJ8NRoJIUSRhj\nleACDcIgzG4Ci1kaOZyh0j/zbIyF6nwm6sm4GyjlJ8RGSI94G7dOYdLFZgOSQ/qB\nF745rjViYR1Pc2gOESMGqp8OuRdX19P4gHCxjGEBmg0ZYoiFoqkstaY7IIvtmnhD\nQOCRiVcggBWsGYyGq/nAFHCPAT8DntZi3GWrsfjSctH3lhggKBD9DNv/I6eG8V8j\nf9au9fz7ja2Sa0Y7zJ/GRPiwa4s03DgH0KcCpQ6B8vOrW7kKU+UODkVF7NwSVMAH\n35Y5eidwuRFEV1XhoZVVbZYyH6161/2vJXhlHD+tKIgERkA5/3SsQ3zOi2QLUxjJ\nOTO5TxY7AgMBAAECggEAI6H43I/cVOuECDxmSNhChXVdfvWh8zZS9UKCn3pwlpBA\n/RqRZZr0sqiBAgaATh/lyaGLrlWW5NF2lYo4edTa4rMF+0iMeKMaQlOiQJqGGRTF\nmFU4bqUIuKoEGwF9/VHvzAtqNg23O+XgJG/hMiqZUU3XF9iMTZdVVPYX+49EzpiL\nRyIdJwUP3oeJS+/o1QHDlO6uNIhYzvUOkeU2cJuuFBh05y4hSdUnHVWoapgznQa0\nyH3Hiruvm0o2/X4ZVvgsPf8m23oXCjC6c6h3xEZBQs2z6ffqdRzlnDuG7Z+vmeAm\ncLiQh2JpfjFt5/nVnuUOBPJWlUiIu9tHCWp3wk012QKBgQDy1ptmueGSASwqdGXo\nTntmlbsc4PaAGGz01VkOXEQ2R4gj4tzgU6brQYtPr9ssvdz18GRxIHmTm9M64EKv\nusS6PRrW6h1Fu+1eX6wam4f6HYJBDJxb1IXAvbilQ0BMacVvrIpDwNQq5/ea+oaK\nn16ixnx+SZkOF4JN2tj0J5TFDwKBgQDQ5S1q7KOy9r0RUAb2YvEZvPcurh6dP4M7\nFN+4iN4pgIyhWXgZv5p8koYjxb9kzYhf+jckQV/uvuWbpegqER4YzfdjRDirbItL\n7RXB2fySDRg2YsnCs5qsns6dGkLGzYVUZ6M8z30sdNdXDpOvxDvgj2wpKzrjfOf+\noy7vM25UFQKBgQDdJ49NZbnFw2WaoHjysQ73JSPMMCCuFhCchPRe/K5ulISq0gAA\nGI7qr72U6/36aEskfDKtSDsQsBgWBYkWC00Ao4ee9IWGLZkGmrDdZonWwisO3NJF\nW24YU3AmqfGT5bwWcRdWjvVqwekg7km7U1rXeVaFmLdYOxbDmqx85tM5BwKBgACK\nt6VxW7NZJIBo/rug4hM5BEMgvH+X7JU4pqPp5vmglbzNaJxYfOQZ1TM+jhKK3fGx\nynbTnJYX9KyEr6d8R+G0lxGw2ZzIOUxHHylTkW4njoqFkxRoNtx/xPVvXgD6A4CG\njEvaFe8Jlo1pQkTQc39Pn+4zaIGyjz9/2N1R+tVJAoGAeo15O7/xLx4qZUtoj1uq\ngr4I/9OyLdAG9nv4wWK44mEWTIrnnYgW6QGjA2KPOQ6AlcV/FDQk6NK4ptHcdI+i\nv58iVj7YoN+vj9sajrCpGzohlH98WEoZb3Byn2C2ZkNNWAZcu/Zv94Xsg+mKeIZB\n51ksbvXFdVfLVEccKFks+k0=\n-----END PRIVATE KEY-----\n',
-                private_key_id: '1ebc991141c4f45e7eff512406e618baa31fb26d',
+                client_email: 'creator@[project id].iam.gserviceaccount.com',
+                client_id: '[client id]',
+                client_x509_cert_url: 'https://www.googleapis.com/robot/v1/metadata/x509/creator%40[project id].iam.gserviceaccount.com',
+                private_key: '[private key]',
+                private_key_id: '[private key id]',
                 token_uri: 'https://oauth2.googleapis.com/token',
                 type: 'service_account',
             },
-            projectId: 'ml-timeseries',
+            projectId: '[project id]',
         })
 
         const firestoreFormatter = (inputDataBar, isHistorical, writeBatch) => {
