@@ -11,7 +11,7 @@
     "test:ci": "jest src/ --testPathIgnorePatterns=Lstm"
   },
   "dependencies": {
-    "@google-cloud/firestore": "^4.11.0",
+    "@google-cloud/firestore": "^6.2.0",
     "@tensorflow/tfjs-node": "^3.6.1",
     "arima": "^0.2.2",
     "array-smooth": "^1.0.0",
