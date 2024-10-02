@@ -15,7 +15,7 @@
     "@tensorflow/tfjs-node": "^3.6.1",
     "arima": "^0.2.2",
     "array-smooth": "^1.0.0",
-    "axios": "^1.6.0",
+    "axios": "^1.7.4",
     "core-js": "^3.15.2",
     "lodash": "^4.17.21",
     "node-fetch": "^2.6.7"
