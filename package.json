@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@google-cloud/firestore": "^7.10.0",
-    "@tensorflow/tfjs-node": "^3.6.1",
+    "@tensorflow/tfjs-node": "^4.21.0",
     "arima": "^0.2.2",
     "array-smooth": "^1.0.0",
     "axios": "^1.7.4",
